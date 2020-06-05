@@ -4,6 +4,7 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "ScanDataComponent.h"
+#include "NoteNode.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -35,6 +36,26 @@ void AFPSPlayer::BeginPlay()
 	}
 }
 
+void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	//Movement
+	InputComponent->BindAxis("Forward", this, &AFPSPlayer::MoveForward);
+	InputComponent->BindAxis("Back", this, &AFPSPlayer::MoveForward);
+	InputComponent->BindAxis("Right", this, &AFPSPlayer::MoveRight);
+	InputComponent->BindAxis("Left", this, &AFPSPlayer::MoveRight);
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AFPSPlayer::Jump);
+
+	//Looking
+	InputComponent->BindAxis("Mouse X", this, &AFPSPlayer::LookSide);
+	InputComponent->BindAxis("Mouse Y", this, &AFPSPlayer::LookUp);
+
+	//Other Actions
+	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
+	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
+}
+
 void AFPSPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -63,25 +84,6 @@ void AFPSPlayer::Tick(float DeltaTime)
 			widgetScanning->scanText = TEXT("No Scan Data");
 		}
 	}
-}
-
-void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
-	//Movement
-	InputComponent->BindAxis("Forward", this, &AFPSPlayer::MoveForward);
-	InputComponent->BindAxis("Back", this, &AFPSPlayer::MoveForward);
-	InputComponent->BindAxis("Right", this, &AFPSPlayer::MoveRight);
-	InputComponent->BindAxis("Left", this, &AFPSPlayer::MoveRight);
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this,&AFPSPlayer::Jump);
-
-	//Looking
-	InputComponent->BindAxis("Mouse X", this, &AFPSPlayer::LookSide);
-	InputComponent->BindAxis("Mouse Y", this, &AFPSPlayer::LookUp);
-
-	//Other Actions
-	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
 }
 
 void AFPSPlayer::MoveForward(float val)
@@ -117,5 +119,17 @@ void AFPSPlayer::SetScan()
 	else if (!bIsScanning && widgetScanning->IsInViewport())
 	{
 		widgetScanning->RemoveFromViewport();
+	}
+}
+
+void AFPSPlayer::SetNote()
+{
+	if (GetWorld()->LineTraceSingleByChannel(noteHit, camera->GetComponentLocation(),
+		camera->GetComponentLocation() + (camera->GetForwardVector() * scanDistance), ECC_WorldStatic, scanParams))
+	{
+		FTransform transform = FTransform();
+		transform.SetLocation(noteHit.ImpactPoint);
+		transform.SetRotation(FQuat(noteHit.ImpactNormal.Rotation()));
+		ANoteNode* noteNode = GetWorld()->SpawnActor<ANoteNode>(noteNodeClass, transform);
 	}
 }

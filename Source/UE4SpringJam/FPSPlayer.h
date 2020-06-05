@@ -21,12 +21,16 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//Bind axis funcs
 	void MoveForward(float val);
 	void MoveRight(float val);
 	void LookUp(float val);
 	void LookSide(float val);
 
+	//Bind action funcs
 	void SetScan();
+	void SetNote();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -42,13 +46,19 @@ public:
 	UPROPERTY()
 	UUserWidget* widgetMainHUD;
 
+	//Actor spawn templates
+	UPROPERTY(EditAnywhere, Category="Spawn Templates")
+	TSubclassOf<class ANoteNode> noteNodeClass;
+
+	//Components
 	class UCameraComponent* camera;
 
+	//Structs
 	FHitResult scanHit;
-	FHitResult previousScanHit;
+	FHitResult noteHit;
 	FCollisionQueryParams scanParams;
 
+	//Variables
 	float scanDistance = 10000.f;
-
 	bool bIsScanning;
 };
