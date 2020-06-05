@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "WidgetScanning.h"
 #include "FPSPlayer.generated.h"
 
 UCLASS()
@@ -24,4 +25,22 @@ public:
 	void MoveRight(float val);
 	void LookUp(float val);
 	void LookSide(float val);
+
+	void SetScan();
+
+	//WIDGET CLASSES
+	UPROPERTY(EditAnywhere, Category="Widgets")
+	TSubclassOf<UUserWidget> widgetScanningClass;
+
+	UPROPERTY(EditAnywhere, Category = "Widgets")
+	TSubclassOf<UUserWidget> widgetMainHUDClass;
+
+	//WIDGET OBJECTS 
+	UPROPERTY()
+	UWidgetScanning* widgetScanning;
+
+	UPROPERTY()
+	UUserWidget* widgetMainHUD;
+
+	bool bIsScanning;
 };
