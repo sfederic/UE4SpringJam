@@ -28,10 +28,12 @@ public:
 	void LookUp(float val);
 	void LookSide(float val);
 
+	void ShootHeat(float val);
+	void ShootIce(float val);
+
 	//Bind action funcs
 	void SetScan();
 	void SetNote();
-	void Shoot();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -52,8 +54,11 @@ public:
 	TSubclassOf<class ANoteNode> noteNodeClass;
 
 	//Particle systems
-	UPROPERTY(EditAnywhere, Category="Particles")
-	class UParticleSystem* particlePlasmaShot;
+	TArray<UParticleSystemComponent*> particleSystems;
+
+	int heatBeamIndex = 0; //For sure these three will go bad...
+	int snowParticleIndex = 1;
+	int iceBeamIndex = 2;
 
 	//Components
 	class UCameraComponent* camera;

@@ -7,6 +7,8 @@
 #include "NoteNode.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "HeatReact.h"
+#include "IceReact.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -36,6 +38,14 @@ void AFPSPlayer::BeginPlay()
 		widgetScanning->scanName = TEXT("No Name");
 		widgetScanning->scanText = TEXT("No Data");
 	}
+
+	//Particles
+	//TODO: enable snow particle
+	GetComponents<UParticleSystemComponent>(particleSystems);
+	for (int i = 0; i < particleSystems.Num(); i++)
+	{
+		particleSystems[i]->SetActive(false);
+	}
 }
 
 void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -53,10 +63,11 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	InputComponent->BindAxis("Mouse X", this, &AFPSPlayer::LookSide);
 	InputComponent->BindAxis("Mouse Y", this, &AFPSPlayer::LookUp);
 
-	//Other Actions
+	//Other Actions/Axis
 	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
 	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
-	InputComponent->BindAction("Shoot", EInputEvent::IE_Pressed, this, &AFPSPlayer::Shoot);
+	InputComponent->BindAxis("ShootHeat", this, &AFPSPlayer::ShootHeat);
+	InputComponent->BindAxis("ShootIce", this, &AFPSPlayer::ShootIce);
 }
 
 void AFPSPlayer::Tick(float DeltaTime)
@@ -137,20 +148,67 @@ void AFPSPlayer::SetNote()
 	}
 }
 
-void AFPSPlayer::Shoot()
+void AFPSPlayer::ShootHeat(float val)
 {
-	UParticleSystemComponent* beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), particlePlasmaShot, GetActorLocation() + (GetActorRightVector() * 25.0f));
-	
-	if (GetWorld()->LineTraceSingleByChannel(shootHit, GetActorLocation() + (GetActorRightVector() * 50.f),
-		GetActorLocation() + (GetActorForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
+	if (val)
 	{
-		beam->SetBeamSourcePoint(0, GetActorLocation() + (GetActorRightVector() * 25.0f), 0);
-		beam->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
+		particleSystems[heatBeamIndex]->SetActive(true);
+
+		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[heatBeamIndex]->GetComponentLocation(),
+			particleSystems[heatBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
+		{
+			particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
+			particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
+
+			//Heat effects
+			IHeatReact* heatReact = Cast<IHeatReact>(shootHit.GetActor());
+			if (heatReact)
+			{
+				heatReact->Heat();
+			}
+		}
+		else
+		{
+			//If no target (eg. shoot into air)
+			particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
+			particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, particleSystems[heatBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), 0);
+		}
 	}
 	else
 	{
-		//If no target (eg. shoot into air)
-		beam->SetBeamSourcePoint(0, GetActorLocation() + (GetActorRightVector() * 25.0f), 0);
-		beam->SetBeamTargetPoint(0, (GetActorLocation() + (GetActorRightVector() * 25.0f)) + (camera->GetForwardVector() * 10000.f), 0);
+		particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
+		particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
+	}
+}
+
+void AFPSPlayer::ShootIce(float val)
+{
+	if (val)
+	{
+		particleSystems[iceBeamIndex]->SetActive(true);
+
+		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[iceBeamIndex]->GetComponentLocation(),
+			particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
+		{
+			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
+			particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
+
+			//Ice Effects
+			IIceReact* iceReact = Cast<IIceReact>(shootHit.GetActor());
+			if (iceReact)
+			{
+				iceReact->Ice();
+			}
+		}
+		else
+		{
+			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
+			particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), 0);
+		}
+	}
+	else
+	{
+		particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
+		particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
 	}
 }
