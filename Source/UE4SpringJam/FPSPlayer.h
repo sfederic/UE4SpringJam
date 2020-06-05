@@ -42,5 +42,13 @@ public:
 	UPROPERTY()
 	UUserWidget* widgetMainHUD;
 
+	class UCameraComponent* camera;
+
+	FHitResult scanHit;
+	FHitResult previousScanHit;
+	FCollisionQueryParams scanParams;
+
+	float scanDistance = 10000.f;
+
 	bool bIsScanning;
 };
