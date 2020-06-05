@@ -5,6 +5,8 @@
 #include "Engine/World.h"
 #include "ScanDataComponent.h"
 #include "NoteNode.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -54,6 +56,7 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	//Other Actions
 	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
 	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
+	InputComponent->BindAction("Shoot", EInputEvent::IE_Pressed, this, &AFPSPlayer::Shoot);
 }
 
 void AFPSPlayer::Tick(float DeltaTime)
@@ -131,5 +134,23 @@ void AFPSPlayer::SetNote()
 		transform.SetLocation(noteHit.ImpactPoint);
 		transform.SetRotation(FQuat(noteHit.ImpactNormal.Rotation()));
 		ANoteNode* noteNode = GetWorld()->SpawnActor<ANoteNode>(noteNodeClass, transform);
+	}
+}
+
+void AFPSPlayer::Shoot()
+{
+	UParticleSystemComponent* beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), particlePlasmaShot, GetActorLocation() + (GetActorRightVector() * 25.0f));
+	
+	if (GetWorld()->LineTraceSingleByChannel(shootHit, GetActorLocation() + (GetActorRightVector() * 50.f),
+		GetActorLocation() + (GetActorForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
+	{
+		beam->SetBeamSourcePoint(0, GetActorLocation() + (GetActorRightVector() * 25.0f), 0);
+		beam->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
+	}
+	else
+	{
+		//If no target (eg. shoot into air)
+		beam->SetBeamSourcePoint(0, GetActorLocation() + (GetActorRightVector() * 25.0f), 0);
+		beam->SetBeamTargetPoint(0, (GetActorLocation() + (GetActorRightVector() * 25.0f)) + (camera->GetForwardVector() * 10000.f), 0);
 	}
 }

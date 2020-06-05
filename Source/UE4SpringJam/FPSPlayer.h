@@ -31,6 +31,7 @@ public:
 	//Bind action funcs
 	void SetScan();
 	void SetNote();
+	void Shoot();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -50,12 +51,17 @@ public:
 	UPROPERTY(EditAnywhere, Category="Spawn Templates")
 	TSubclassOf<class ANoteNode> noteNodeClass;
 
+	//Particle systems
+	UPROPERTY(EditAnywhere, Category="Particles")
+	class UParticleSystem* particlePlasmaShot;
+
 	//Components
 	class UCameraComponent* camera;
 
 	//Structs
 	FHitResult scanHit;
 	FHitResult noteHit;
+	FHitResult shootHit;
 	FCollisionQueryParams scanParams;
 
 	//Variables
