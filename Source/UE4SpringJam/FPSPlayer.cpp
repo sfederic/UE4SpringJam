@@ -9,6 +9,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "HeatReact.h"
 #include "IceReact.h"
+#include "DestructibleComponent.h"
+#include "Water.h"
+#include "SpawnIceBlock.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -66,6 +69,7 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	//Other Actions/Axis
 	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
 	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
+	InputComponent->BindAction("DeleteNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::DeleteLastNote);
 	InputComponent->BindAxis("ShootHeat", this, &AFPSPlayer::ShootHeat);
 	InputComponent->BindAxis("ShootIce", this, &AFPSPlayer::ShootIce);
 }
@@ -103,13 +107,13 @@ void AFPSPlayer::Tick(float DeltaTime)
 void AFPSPlayer::MoveForward(float val)
 {
 	FVector dir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-	AddMovementInput(dir, val);
+	AddMovementInput(dir, val * moveSpeed);
 }
 
 void AFPSPlayer::MoveRight(float val)
 {
 	FVector dir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-	AddMovementInput(dir, val);
+	AddMovementInput(dir, val * moveSpeed);
 }
 
 void AFPSPlayer::LookUp(float val)
@@ -145,6 +149,10 @@ void AFPSPlayer::SetNote()
 		transform.SetLocation(noteHit.ImpactPoint);
 		transform.SetRotation(FQuat(noteHit.ImpactNormal.Rotation()));
 		ANoteNode* noteNode = GetWorld()->SpawnActor<ANoteNode>(noteNodeClass, transform);
+		if (noteNode)
+		{
+			notesInLevel.Add(noteNode);
+		}
 	}
 }
 
@@ -165,6 +173,13 @@ void AFPSPlayer::ShootHeat(float val)
 			if (heatReact)
 			{
 				heatReact->Heat();
+				return; //TODO: Good for now, not good for later
+			}
+
+			UDestructibleComponent* dc = shootHit.GetActor()->FindComponentByClass<UDestructibleComponent>();
+			if (dc)
+			{
+				dc->ApplyDamage(destructionDamageAmount, shootHit.ImpactPoint, camera->GetForwardVector(), destructionImpulseStrength);
 			}
 		}
 		else
@@ -188,6 +203,21 @@ void AFPSPlayer::ShootIce(float val)
 		particleSystems[iceBeamIndex]->SetActive(true);
 
 		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[iceBeamIndex]->GetComponentLocation(),
+			particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_GameTraceChannel1, scanParams))
+		{
+			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
+			particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
+
+			//Spawn ice blocks in water
+			if (shootHit.GetActor()->IsA<AWater>())
+			{
+				FTransform trans = {};
+				trans.SetLocation(shootHit.ImpactPoint);
+				trans.SetRotation(FQuat::Identity);
+				GetWorld()->SpawnActor<ASpawnIceBlock>(iceBlockSpawnClass, trans);
+			}
+		}
+		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[iceBeamIndex]->GetComponentLocation(),
 			particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
 		{
 			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
@@ -210,5 +240,15 @@ void AFPSPlayer::ShootIce(float val)
 	{
 		particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
 		particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
+	}
+}
+
+void AFPSPlayer::DeleteLastNote()
+{
+	if (notesInLevel.Num() > 0)
+	{
+		const int lastElement = notesInLevel.Num() - 1;
+		notesInLevel[lastElement]->Destroy();
+		notesInLevel.Pop();
 	}
 }

@@ -34,6 +34,7 @@ public:
 	//Bind action funcs
 	void SetScan();
 	void SetNote();
+	void DeleteLastNote();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -53,6 +54,9 @@ public:
 	UPROPERTY(EditAnywhere, Category="Spawn Templates")
 	TSubclassOf<class ANoteNode> noteNodeClass;
 
+	UPROPERTY(EditAnywhere, Category = "Spawn Templates")
+	TSubclassOf<class ASpawnIceBlock> iceBlockSpawnClass;
+
 	//Particle systems
 	TArray<UParticleSystemComponent*> particleSystems;
 
@@ -70,6 +74,18 @@ public:
 	FCollisionQueryParams scanParams;
 
 	//Variables
+	TArray<AActor*> notesInLevel;
+
 	float scanDistance = 10000.f;
+
+	UPROPERTY(EditAnywhere)
+	float destructionDamageAmount;
+
+	UPROPERTY(EditAnywhere)
+	float destructionImpulseStrength;
+
+	UPROPERTY(EditAnywhere)
+	float moveSpeed;
+
 	bool bIsScanning;
 };

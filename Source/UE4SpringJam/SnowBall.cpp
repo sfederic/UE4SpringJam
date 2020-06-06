@@ -2,7 +2,7 @@
 
 #include "SnowBall.h"
 #include "Components/MeshComponent.h"
-#include "destructible/DestructibleActor.h"
+
 
 ASnowBall::ASnowBall()
 {
