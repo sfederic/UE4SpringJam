@@ -43,12 +43,13 @@ void AFPSPlayer::BeginPlay()
 	}
 
 	//Particles
-	//TODO: enable snow particle
 	GetComponents<UParticleSystemComponent>(particleSystems);
 	for (int i = 0; i < particleSystems.Num(); i++)
 	{
 		particleSystems[i]->SetActive(false);
 	}
+
+	particleSystems[snowParticleIndex]->SetActive(true);
 }
 
 void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -161,12 +162,18 @@ void AFPSPlayer::ShootHeat(float val)
 	if (val)
 	{
 		particleSystems[heatBeamIndex]->SetActive(true);
+		particleSystems[heatBeamSparksIndex]->SetActive(true);
 
 		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[heatBeamIndex]->GetComponentLocation(),
 			particleSystems[heatBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
 		{
 			particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
 			particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
+
+			particleSystems[heatBeamSparksIndex]->SetWorldLocation(shootHit.ImpactPoint);
+
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), heatShotDecal, FVector(10.f), shootHit.ImpactPoint + FVector(0.f, 0.f, 1.f), 
+				FRotator(-90.f, 0.f,0.f), 1.5f);
 
 			//Heat effects
 			IHeatReact* heatReact = Cast<IHeatReact>(shootHit.GetActor());
@@ -187,12 +194,16 @@ void AFPSPlayer::ShootHeat(float val)
 			//If no target (eg. shoot into air)
 			particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
 			particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, particleSystems[heatBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), 0);
+
+			particleSystems[heatBeamSparksIndex]->SetActive(false);
 		}
 	}
 	else
 	{
 		particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
 		particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
+
+		particleSystems[heatBeamSparksIndex]->SetActive(false);
 	}
 }
 

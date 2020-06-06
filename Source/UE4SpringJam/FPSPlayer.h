@@ -54,15 +54,19 @@ public:
 	UPROPERTY(EditAnywhere, Category="Spawn Templates")
 	TSubclassOf<class ANoteNode> noteNodeClass;
 
-	UPROPERTY(EditAnywhere, Category = "Spawn Templates")
+	UPROPERTY(EditAnywhere, Category="Spawn Templates")
 	TSubclassOf<class ASpawnIceBlock> iceBlockSpawnClass;
+
+	UPROPERTY(EditAnywhere, Category="Spawn Templates")
+	UMaterialInterface* heatShotDecal;
 
 	//Particle systems
 	TArray<UParticleSystemComponent*> particleSystems;
 
-	int heatBeamIndex = 0; //For sure these three will go bad...
-	int snowParticleIndex = 1;
-	int iceBeamIndex = 2;
+	const int heatBeamIndex = 0; //For sure these three will go bad...
+	const int iceBeamIndex = 1;
+	const int snowParticleIndex = 2;
+	const int heatBeamSparksIndex = 3;
 
 	//Components
 	class UCameraComponent* camera;
