@@ -33,10 +33,11 @@ void AFPSPlayer::BeginPlay()
 	check(camera);
 
 	//UI Setup
-	widgetMainHUD = CreateWidget<UUserWidget>(GetWorld(), widgetMainHUDClass);
+	widgetMainHUD = CreateWidget<UMainHUDWidget>(GetWorld(), widgetMainHUDClass);
 	if (widgetMainHUD)
 	{
 		widgetMainHUD->AddToViewport();
+		widgetMainHUD->bNoteActive = false;
 	}
 
 	widgetScanning = CreateWidget<UWidgetScanning>(GetWorld(), widgetScanningClass);
@@ -122,6 +123,13 @@ void AFPSPlayer::Tick(float DeltaTime)
 			UScanDataComponent* scanData = scanHit.GetActor()->FindComponentByClass<UScanDataComponent>();
 			if (scanData)
 			{
+				if (previousScanHit.GetActor() != scanHit.GetActor())
+				{
+					UGameplayStatics::PlaySound2D(GetWorld(), soundScan);
+				}
+
+				previousScanHit = scanHit;
+
 				widgetScanning->scanName = scanData->scanName;
 				widgetScanning->scanText = scanData->scanText;
 			}
@@ -137,6 +145,13 @@ void AFPSPlayer::Tick(float DeltaTime)
 			UScanDataComponent* scanData = scanHit.GetActor()->FindComponentByClass<UScanDataComponent>();
 			if (scanData)
 			{
+				if (previousScanHit.GetActor() != scanHit.GetActor())
+				{
+					UGameplayStatics::PlaySound2D(GetWorld(), soundScan);
+				}
+
+				previousScanHit = scanHit;
+
 				widgetScanning->scanName = scanData->scanName;
 				widgetScanning->scanText = scanData->scanText;
 			}
@@ -179,15 +194,22 @@ void AFPSPlayer::LookSide(float val)
 
 void AFPSPlayer::SetScan()
 {
+	if (bIntel || widgetMainHUD->bNoteActive)
+	{
+		return;
+	}
+
 	bIsScanning = !bIsScanning;
 
 	if (bIsScanning && !widgetScanning->IsInViewport())
 	{
 		widgetScanning->AddToViewport();
+		UGameplayStatics::PlaySound2D(GetWorld(), soundScanOn);
 	}
 	else if (!bIsScanning && widgetScanning->IsInViewport())
 	{
 		widgetScanning->RemoveFromViewport();
+		UGameplayStatics::PlaySound2D(GetWorld(), soundScanOff);
 	}
 }
 
@@ -206,6 +228,8 @@ void AFPSPlayer::SetNote()
 			noteWidget->noteLocation = noteHit.ImpactPoint;
 			
 			notesInLevel.Add(noteNode);
+
+			widgetMainHUD->bNoteActive = true;
 		}
 	}
 }
@@ -214,6 +238,12 @@ void AFPSPlayer::ShootHeat(float val)
 {
 	if (val && !bIntel)
 	{
+		if (widgetMainHUD->bNoteActive)
+		{
+			widgetMainHUD->bNoteActive = false;
+			return;
+		}
+
 		particleSystems[heatBeamIndex]->SetActive(true);
 		particleSystems[heatBeamSparksIndex]->SetActive(true);
 
@@ -265,6 +295,13 @@ void AFPSPlayer::ShootIce(float val)
 {
 	if (val && !bIntel)
 	{
+		if (widgetMainHUD->bNoteActive)
+		{
+			widgetMainHUD->bNoteActive = false;
+			return;
+		}
+
+
 		particleSystems[iceBeamIndex]->SetActive(true);
 		particleSystems[iceBeamSparksIndex]->SetActive(true);
 

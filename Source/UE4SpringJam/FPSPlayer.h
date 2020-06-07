@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "WidgetScanning.h"
+#include "MainHUDWidget.h"
 #include "ConvoWidget.h"
 #include "ConvoData.h"
 #include "FPSPlayer.generated.h"
@@ -58,7 +59,7 @@ public:
 	UWidgetScanning* widgetScanning;
 
 	UPROPERTY()
-	UUserWidget* widgetMainHUD;	
+	UMainHUDWidget* widgetMainHUD;	
 	
 	UPROPERTY()
 	UConvoWidget* widgetConvo;
@@ -85,11 +86,22 @@ public:
 	int heatBeamSparksIndex;
 	int iceBeamSparksIndex;
 
+	//Sounds
+	UPROPERTY(EditAnywhere, Category="Sounds")
+	USoundBase* soundScan;	
+	
+	UPROPERTY(EditAnywhere, Category="Sounds")
+	USoundBase* soundScanOn;	
+
+	UPROPERTY(EditAnywhere, Category="Sounds")
+	USoundBase* soundScanOff;
+
 	//Components
 	class UCameraComponent* camera;
 
 	//Structs
 	FHitResult scanHit;
+	FHitResult previousScanHit;
 	FHitResult noteHit;
 	FHitResult shootHit;
 	FCollisionQueryParams scanParams;
