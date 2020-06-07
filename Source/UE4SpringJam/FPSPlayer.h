@@ -60,13 +60,17 @@ public:
 	UPROPERTY(EditAnywhere, Category="Spawn Templates")
 	UMaterialInterface* heatShotDecal;
 
+	UPROPERTY(EditAnywhere, Category = "Spawn Templates")
+	UMaterialInterface* iceShotDecal;
+
 	//Particle systems
 	TArray<UParticleSystemComponent*> particleSystems;
 
-	const int heatBeamIndex = 0; //For sure these three will go bad...
-	const int iceBeamIndex = 1;
-	const int snowParticleIndex = 2;
-	const int heatBeamSparksIndex = 3;
+	int heatBeamIndex; //For sure these three will go bad...
+	int iceBeamIndex;
+	int snowParticleIndex;
+	int heatBeamSparksIndex;
+	int iceBeamSparksIndex;
 
 	//Components
 	class UCameraComponent* camera;

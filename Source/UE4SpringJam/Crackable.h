@@ -5,15 +5,17 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "HeatReact.h"
-#include "SpawnIceBlock.generated.h"
+#include "Crackable.generated.h"
+
+//Class for using heat crack material( might to it on the ice too, reparent)
 
 UCLASS()
-class UE4SPRINGJAM_API ASpawnIceBlock : public AActor, public IHeatReact
+class UE4SPRINGJAM_API ACrackable : public AActor, public IHeatReact
 {
 	GENERATED_BODY()
 	
 public:	
-	ASpawnIceBlock();
+	ACrackable();
 
 protected:
 	virtual void BeginPlay() override;
@@ -22,8 +24,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Heat() override;
 
-	void DestroyOnTimer();
+	class UDestructibleComponent* dc;
 
-	float destroyTimer = 0.f;
-	bool bStartDestroyTimer = false;
+	UPROPERTY(EditAnywhere)
+	float crackIncrement;
+
+	float crackVal = 0.f;
 };

@@ -47,6 +47,30 @@ void AFPSPlayer::BeginPlay()
 	for (int i = 0; i < particleSystems.Num(); i++)
 	{
 		particleSystems[i]->SetActive(false);
+
+		//This is terrible. Make a game in 5 days they said...
+		//TODO: ask Epic how they do this properly (multiple FIndComponents)
+		FString name = particleSystems[i]->GetName();
+		if (name.Compare(TEXT("HeatShot")) == 0)
+		{
+			heatBeamIndex = i;
+		}
+		else if (name.Compare(TEXT("IceShot")) == 0)
+		{
+			iceBeamIndex = i;
+		}
+		else if (name.Compare(TEXT("HeatShotSparks")) == 0)
+		{
+			heatBeamSparksIndex = i;
+		}
+		else if (name.Compare(TEXT("SnowParticle")) == 0)
+		{
+			snowParticleIndex = i;
+		}
+		else if (name.Compare(TEXT("IceShotSparks")) == 0)
+		{
+			iceBeamSparksIndex = i;
+		}
 	}
 
 	particleSystems[snowParticleIndex]->SetActive(true);
@@ -172,8 +196,9 @@ void AFPSPlayer::ShootHeat(float val)
 
 			particleSystems[heatBeamSparksIndex]->SetWorldLocation(shootHit.ImpactPoint);
 
-			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), heatShotDecal, FVector(10.f), shootHit.ImpactPoint + FVector(0.f, 0.f, 1.f), 
-				FRotator(-90.f, 0.f,0.f), 1.5f);
+			FRotator randomRotationOffset = FRotator(FMath::RandRange(0.f, 90.f)); //Looks better than always repeating.
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), heatShotDecal, FVector(25.f), shootHit.ImpactPoint + FVector(0.f, 0.f, 0.5f), 
+				shootHit.ImpactNormal.Rotation() + randomRotationOffset, 3.f);
 
 			//Heat effects
 			IHeatReact* heatReact = Cast<IHeatReact>(shootHit.GetActor());
@@ -212,6 +237,7 @@ void AFPSPlayer::ShootIce(float val)
 	if (val)
 	{
 		particleSystems[iceBeamIndex]->SetActive(true);
+		particleSystems[iceBeamSparksIndex]->SetActive(true);
 
 		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[iceBeamIndex]->GetComponentLocation(),
 			particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_GameTraceChannel1, scanParams))
@@ -219,12 +245,18 @@ void AFPSPlayer::ShootIce(float val)
 			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
 			particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
 
+			particleSystems[iceBeamSparksIndex]->SetWorldLocation(shootHit.ImpactPoint);
+
+			FRotator randomRotationOffset = FRotator(FMath::RandRange(0.f, 90.f));
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), iceShotDecal, FVector(25.f), shootHit.ImpactPoint + FVector(0.f, 0.f, 0.5f),
+				shootHit.ImpactNormal.Rotation() + randomRotationOffset, 3.f);
+
 			//Spawn ice blocks in water
 			if (shootHit.GetActor()->IsA<AWater>())
 			{
 				FTransform trans = {};
 				trans.SetLocation(shootHit.ImpactPoint);
-				trans.SetRotation(FQuat::Identity);
+				trans.SetRotation(FQuat(FRotator(0.f, FMath::RandRange(0.f, 360.f), 0.f)));
 				GetWorld()->SpawnActor<ASpawnIceBlock>(iceBlockSpawnClass, trans);
 			}
 		}
@@ -245,12 +277,16 @@ void AFPSPlayer::ShootIce(float val)
 		{
 			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
 			particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), 0);
+
+			particleSystems[iceBeamSparksIndex]->SetActive(false);
 		}
 	}
 	else
 	{
 		particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
 		particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
+
+		particleSystems[iceBeamSparksIndex]->SetActive(false);
 	}
 }
 
