@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "WidgetScanning.h"
 #include "ConvoWidget.h"
+#include "ConvoData.h"
 #include "FPSPlayer.generated.h"
 
 UCLASS()
@@ -40,6 +41,7 @@ public:
 	void SetNote();
 	void DeleteLastNote();
 	void Intel();
+	void ProgressText();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -116,6 +118,11 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	float shootDistance;
+	
+	//Intel vars
+	TArray<FConvoData*> rows;
+	int currentIntelIndex = 0;
 
 	bool bIsScanning;
+	bool bIntel;
 };

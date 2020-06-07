@@ -14,6 +14,8 @@
 #include "SpawnIceBlock.h"
 #include "ConvoWidget.h"
 #include "ConvoComponent.h"
+#include "Components/WidgetComponent.h"
+#include "NoteWidget.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -102,6 +104,7 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
 	InputComponent->BindAction("DeleteNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::DeleteLastNote);
 	InputComponent->BindAction("Intel", EInputEvent::IE_Pressed, this, &AFPSPlayer::Intel);
+	InputComponent->BindAction("ProgressText", EInputEvent::IE_Pressed, this, &AFPSPlayer::ProgressText);
 	InputComponent->BindAxis("ShootHeat", this, &AFPSPlayer::ShootHeat);
 	InputComponent->BindAxis("ShootIce", this, &AFPSPlayer::ShootIce);
 }
@@ -153,7 +156,8 @@ void AFPSPlayer::Tick(float DeltaTime)
 
 void AFPSPlayer::MoveForward(float val)
 {
-	FVector dir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+	//FVector dir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+	FVector dir = GetActorForwardVector();
 	AddMovementInput(dir, val * moveSpeed);
 }
 
@@ -198,6 +202,9 @@ void AFPSPlayer::SetNote()
 		ANoteNode* noteNode = GetWorld()->SpawnActor<ANoteNode>(noteNodeClass, transform);
 		if (noteNode)
 		{
+			UNoteWidget* noteWidget = Cast<UNoteWidget>(noteNode->FindComponentByClass<UWidgetComponent>()->GetUserWidgetObject());
+			noteWidget->noteLocation = noteHit.ImpactPoint;
+			
 			notesInLevel.Add(noteNode);
 		}
 	}
@@ -205,7 +212,7 @@ void AFPSPlayer::SetNote()
 
 void AFPSPlayer::ShootHeat(float val)
 {
-	if (val)
+	if (val && !bIntel)
 	{
 		particleSystems[heatBeamIndex]->SetActive(true);
 		particleSystems[heatBeamSparksIndex]->SetActive(true);
@@ -256,7 +263,7 @@ void AFPSPlayer::ShootHeat(float val)
 
 void AFPSPlayer::ShootIce(float val)
 {
-	if (val)
+	if (val && !bIntel)
 	{
 		particleSystems[iceBeamIndex]->SetActive(true);
 		particleSystems[iceBeamSparksIndex]->SetActive(true);
@@ -342,28 +349,51 @@ void AFPSPlayer::DeleteLastNote()
 
 void AFPSPlayer::Intel()
 {
-	FHitResult intelHit;
-	if (GetWorld()->LineTraceSingleByChannel(intelHit, camera->GetComponentLocation(),
-		camera->GetComponentLocation() + (camera->GetForwardVector() * scanDistance), ECC_WorldStatic, scanParams))
+	if (widgetConvo->IsInViewport() == false)
 	{
-		AActor* actor = intelHit.GetActor();
-		if (actor)
+		widgetScanning->RemoveFromViewport();
+		bIsScanning = false;
+		bIntel = true;
+
+		FHitResult intelHit;
+		if (GetWorld()->LineTraceSingleByChannel(intelHit, camera->GetComponentLocation(),
+			camera->GetComponentLocation() + (camera->GetForwardVector() * scanDistance), ECC_WorldStatic, scanParams))
 		{
-			UConvoComponent* convo = actor->FindComponentByClass<UConvoComponent>();
-			if (convo)
+			AActor* actor = intelHit.GetActor();
+			if (actor)
 			{
-				TArray<FConvoData*> rows;
-				FString context;
-				convo->data->GetAllRows<FConvoData>(context, rows);
-
-				widgetConvo->AddToViewport();
-
-				for (int i = 0; i < rows.Num(); i++)
+				UConvoComponent* convo = actor->FindComponentByClass<UConvoComponent>();
+				if (convo)
 				{
-					widgetConvo->name = rows[i]->name;
-					widgetConvo->text = rows[i]->text;
+					FString context;
+					convo->data->GetAllRows<FConvoData>(context, rows);
+
+					widgetConvo->AddToViewport();
+
+					widgetConvo->name = rows[0]->name;
+					widgetConvo->text = rows[0]->text;
 				}
 			}
+		}
+	}
+}
+
+void AFPSPlayer::ProgressText()
+{
+	//Do dialogue
+	if (bIntel)
+	{
+		currentIntelIndex++;
+
+		if (currentIntelIndex >= rows.Num())
+		{
+			bIntel = false;
+			widgetConvo->RemoveFromViewport();
+		}
+		else
+		{
+			widgetConvo->name = rows[currentIntelIndex]->name;
+			widgetConvo->text = rows[currentIntelIndex]->text;
 		}
 	}
 }

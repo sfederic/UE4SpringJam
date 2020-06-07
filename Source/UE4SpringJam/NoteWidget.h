@@ -18,6 +18,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString noteText;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector distance;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector noteLocation;
+
     UPROPERTY(EditAnywhere, BluePrintReadWrite)
     bool bFirstSpawn = true; //Start it off on true for later mechanics
 };
