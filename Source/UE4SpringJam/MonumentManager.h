@@ -4,28 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HeatReact.h"
-#include "IceBreak.generated.h"
+#include "MonumentManager.generated.h"
 
 UCLASS()
-class UE4SPRINGJAM_API AIceBreak : public AActor, public IHeatReact
+class UE4SPRINGJAM_API AMonumentManager : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AIceBreak();
+	AMonumentManager();
 
 protected:
 	virtual void BeginPlay() override;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
-	virtual void Heat() override;
 
-	class UDestructibleComponent* dc;
-
-	float crackVal = 0.f;
-	//const float crackIncrement = 0.01f;
-
-	bool bIsCrackActive = false;
+	TArray<AActor*> monuments;
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "WidgetScanning.h"
+#include "ConvoWidget.h"
 #include "FPSPlayer.generated.h"
 
 UCLASS()
@@ -31,24 +32,34 @@ public:
 	void ShootHeat(float val);
 	void ShootIce(float val);
 
+	void ZoomIn(float val);
+	void ZoomOut(float val);
+
 	//Bind action funcs
 	void SetScan();
 	void SetNote();
 	void DeleteLastNote();
+	void Intel();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
 	TSubclassOf<UUserWidget> widgetScanningClass;
 
 	UPROPERTY(EditAnywhere, Category = "Widgets")
-	TSubclassOf<UUserWidget> widgetMainHUDClass;
+	TSubclassOf<UUserWidget> widgetMainHUDClass;	
+	
+	UPROPERTY(EditAnywhere, Category = "Widgets")
+	TSubclassOf<UUserWidget> widgetConvoClass;
 
 	//WIDGET OBJECTS 
 	UPROPERTY()
 	UWidgetScanning* widgetScanning;
 
 	UPROPERTY()
-	UUserWidget* widgetMainHUD;
+	UUserWidget* widgetMainHUD;	
+	
+	UPROPERTY()
+	UConvoWidget* widgetConvo;
 
 	//Actor spawn templates
 	UPROPERTY(EditAnywhere, Category="Spawn Templates")
@@ -84,7 +95,8 @@ public:
 	//Variables
 	TArray<AActor*> notesInLevel;
 
-	float scanDistance = 10000.f;
+	UPROPERTY(EditAnywhere)
+	float scanDistance;
 
 	UPROPERTY(EditAnywhere)
 	float destructionDamageAmount;
@@ -94,6 +106,16 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float moveSpeed;
+
+	//FOV values
+	const float zoomMin = 5.f;
+	const float zoomMax = 90.f;
+
+	UPROPERTY(EditAnywhere)
+	float zoomSpeed;	
+	
+	UPROPERTY(EditAnywhere)
+	float shootDistance;
 
 	bool bIsScanning;
 };

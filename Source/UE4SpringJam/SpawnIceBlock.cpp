@@ -31,7 +31,7 @@ void ASpawnIceBlock::Tick(float DeltaTime)
 			scale -= FVector(0.01f);
 			SetActorScale3D(scale);
 
-			if (scale.X < 0.01f)
+			if (scale.X < 0.1f)
 			{
 				Destroy();
 			}

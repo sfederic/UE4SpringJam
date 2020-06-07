@@ -12,6 +12,8 @@
 #include "DestructibleComponent.h"
 #include "Water.h"
 #include "SpawnIceBlock.h"
+#include "ConvoWidget.h"
+#include "ConvoComponent.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -41,6 +43,9 @@ void AFPSPlayer::BeginPlay()
 		widgetScanning->scanName = TEXT("No Name");
 		widgetScanning->scanText = TEXT("No Data");
 	}
+
+	widgetConvo = CreateWidget<UConvoWidget>(GetWorld(), widgetConvoClass);
+
 
 	//Particles
 	GetComponents<UParticleSystemComponent>(particleSystems);
@@ -90,11 +95,13 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	//Looking
 	InputComponent->BindAxis("Mouse X", this, &AFPSPlayer::LookSide);
 	InputComponent->BindAxis("Mouse Y", this, &AFPSPlayer::LookUp);
+	InputComponent->BindAxis("ZoomIn", this, &AFPSPlayer::ZoomIn);
 
 	//Other Actions/Axis
 	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
 	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
 	InputComponent->BindAction("DeleteNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::DeleteLastNote);
+	InputComponent->BindAction("Intel", EInputEvent::IE_Pressed, this, &AFPSPlayer::Intel);
 	InputComponent->BindAxis("ShootHeat", this, &AFPSPlayer::ShootHeat);
 	InputComponent->BindAxis("ShootIce", this, &AFPSPlayer::ShootIce);
 }
@@ -108,6 +115,21 @@ void AFPSPlayer::Tick(float DeltaTime)
 	{
 		if (GetWorld()->LineTraceSingleByChannel(scanHit, camera->GetComponentLocation(),
 			camera->GetComponentLocation() + (camera->GetForwardVector() * scanDistance), ECC_WorldStatic, scanParams))
+		{
+			UScanDataComponent* scanData = scanHit.GetActor()->FindComponentByClass<UScanDataComponent>();
+			if (scanData)
+			{
+				widgetScanning->scanName = scanData->scanName;
+				widgetScanning->scanText = scanData->scanText;
+			}
+			else
+			{
+				widgetScanning->scanName = TEXT("No Name");
+				widgetScanning->scanText = TEXT("No Scan Data");
+			}
+		}
+		else if (GetWorld()->LineTraceSingleByChannel(scanHit, camera->GetComponentLocation(),
+			camera->GetComponentLocation() + (camera->GetForwardVector() * scanDistance), ECC_GameTraceChannel1, scanParams))
 		{
 			UScanDataComponent* scanData = scanHit.GetActor()->FindComponentByClass<UScanDataComponent>();
 			if (scanData)
@@ -189,7 +211,7 @@ void AFPSPlayer::ShootHeat(float val)
 		particleSystems[heatBeamSparksIndex]->SetActive(true);
 
 		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[heatBeamIndex]->GetComponentLocation(),
-			particleSystems[heatBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_WorldStatic, scanParams))
+			particleSystems[heatBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * shootDistance), ECC_WorldStatic, scanParams))
 		{
 			particleSystems[heatBeamIndex]->SetBeamSourcePoint(0, particleSystems[heatBeamIndex]->GetComponentLocation(), 0);
 			particleSystems[heatBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
@@ -205,14 +227,14 @@ void AFPSPlayer::ShootHeat(float val)
 			if (heatReact)
 			{
 				heatReact->Heat();
-				return; //TODO: Good for now, not good for later
+				//return; //TODO: Good for now, not good for later
 			}
 
-			UDestructibleComponent* dc = shootHit.GetActor()->FindComponentByClass<UDestructibleComponent>();
+			/*UDestructibleComponent* dc = shootHit.GetActor()->FindComponentByClass<UDestructibleComponent>();
 			if (dc)
 			{
 				dc->ApplyDamage(destructionDamageAmount, shootHit.ImpactPoint, camera->GetForwardVector(), destructionImpulseStrength);
-			}
+			}*/
 		}
 		else
 		{
@@ -240,7 +262,7 @@ void AFPSPlayer::ShootIce(float val)
 		particleSystems[iceBeamSparksIndex]->SetActive(true);
 
 		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[iceBeamIndex]->GetComponentLocation(),
-			particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * 10000.f), ECC_GameTraceChannel1, scanParams))
+			particleSystems[iceBeamIndex]->GetComponentLocation() + (camera->GetForwardVector() * shootDistance), ECC_GameTraceChannel1, scanParams))
 		{
 			particleSystems[iceBeamIndex]->SetBeamSourcePoint(0, particleSystems[iceBeamIndex]->GetComponentLocation(), 0);
 			particleSystems[iceBeamIndex]->SetBeamTargetPoint(0, shootHit.ImpactPoint, 0);
@@ -290,6 +312,24 @@ void AFPSPlayer::ShootIce(float val)
 	}
 }
 
+void AFPSPlayer::ZoomIn(float val)
+{
+	if (val)
+	{
+		camera->FieldOfView -= (zoomSpeed * val);
+		camera->FieldOfView = FMath::Clamp(camera->FieldOfView, zoomMin, zoomMax);
+	}
+}
+
+void AFPSPlayer::ZoomOut(float val)
+{
+	if (val)
+	{
+		camera->FieldOfView += (zoomSpeed * val);
+		camera->FieldOfView = FMath::Clamp(camera->FieldOfView, zoomMin, zoomMax);
+	}
+}
+
 void AFPSPlayer::DeleteLastNote()
 {
 	if (notesInLevel.Num() > 0)
@@ -297,5 +337,33 @@ void AFPSPlayer::DeleteLastNote()
 		const int lastElement = notesInLevel.Num() - 1;
 		notesInLevel[lastElement]->Destroy();
 		notesInLevel.Pop();
+	}
+}
+
+void AFPSPlayer::Intel()
+{
+	FHitResult intelHit;
+	if (GetWorld()->LineTraceSingleByChannel(intelHit, camera->GetComponentLocation(),
+		camera->GetComponentLocation() + (camera->GetForwardVector() * scanDistance), ECC_WorldStatic, scanParams))
+	{
+		AActor* actor = intelHit.GetActor();
+		if (actor)
+		{
+			UConvoComponent* convo = actor->FindComponentByClass<UConvoComponent>();
+			if (convo)
+			{
+				TArray<FConvoData*> rows;
+				FString context;
+				convo->data->GetAllRows<FConvoData>(context, rows);
+
+				widgetConvo->AddToViewport();
+
+				for (int i = 0; i < rows.Num(); i++)
+				{
+					widgetConvo->name = rows[i]->name;
+					widgetConvo->text = rows[i]->text;
+				}
+			}
+		}
 	}
 }
