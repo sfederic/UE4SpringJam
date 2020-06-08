@@ -8,6 +8,7 @@
 #include "MainHUDWidget.h"
 #include "ConvoWidget.h"
 #include "ConvoData.h"
+#include "Engine/ExponentialHeightFog.h" 
 #include "FPSPlayer.generated.h"
 
 UCLASS()
@@ -77,6 +78,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawn Templates")
 	UMaterialInterface* iceShotDecal;
 
+	UPROPERTY(EditAnywhere)
+	AExponentialHeightFog* fog;
+
 	//Particle systems
 	TArray<UParticleSystemComponent*> particleSystems;
 
@@ -100,6 +104,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Sounds")
 	USoundBase* iceSpawn;
+
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* soundBossScream;
 
 	//Components
 	class UCameraComponent* camera;
@@ -142,4 +149,8 @@ public:
 
 	bool bIsScanning;
 	bool bIntel;
+	bool bFirstBossSpawn = false;
+
+	UPROPERTY(EditAnywhere)
+	AActor* bossActor;
 };

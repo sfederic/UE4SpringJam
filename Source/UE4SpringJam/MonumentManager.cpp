@@ -22,5 +22,6 @@ void AMonumentManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
 }
 

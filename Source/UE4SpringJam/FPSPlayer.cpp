@@ -17,6 +17,7 @@
 #include "Components/WidgetComponent.h"
 #include "NoteWidget.h"
 #include "Components/AudioComponent.h"
+#include "Components/ExponentialHeightFogComponent.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -29,7 +30,8 @@ AFPSPlayer::AFPSPlayer()
 void AFPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+
 	camera = FindComponentByClass<UCameraComponent>();
 	check(camera);
 
@@ -117,6 +119,26 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void AFPSPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//Check end game stat
+	if (widgetMainHUD->monumentsDestroyedCounter >= 1 && bFirstBossSpawn == false)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), soundBossScream, bossActor->GetActorLocation(), 1.0f, 0.8f);
+		bFirstBossSpawn = true;
+
+	}
+
+	if (bFirstBossSpawn) 
+	{
+		UExponentialHeightFogComponent *fogComp = fog->GetComponent();
+		float currentDensity = fogComp->FogDensity;
+		currentDensity -= FApp::GetDeltaTime() * 0.5f;
+		fogComp->SetFogDensity(currentDensity);
+		
+		//Turn off snow
+		particleSystems[snowParticleIndex]->SetActive(false);
+		bossActor->SetHidden(false);
+	}
 
 	//Scanning
 	if (bIsScanning)
