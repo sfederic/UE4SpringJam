@@ -3,6 +3,7 @@
 
 #include "IceBreak.h"
 #include "DestructibleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AIceBreak::AIceBreak()
 {
@@ -30,6 +31,7 @@ void AIceBreak::Tick(float DeltaTime)
 			dc->ApplyDamage(1000.f, GetActorLocation(), GetActorForwardVector(), 2000.f);
 			SetLifeSpan(2.0f);
 			bIsCrackActive = false;
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), breakSound, GetActorLocation());
 		}
 	}
 }

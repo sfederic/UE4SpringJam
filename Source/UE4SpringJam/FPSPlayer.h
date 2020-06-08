@@ -96,6 +96,8 @@ public:
 	UPROPERTY(EditAnywhere, Category="Sounds")
 	USoundBase* soundScanOff;
 
+	class UAudioComponent* laserAudio; //For looping
+
 	//Components
 	class UCameraComponent* camera;
 

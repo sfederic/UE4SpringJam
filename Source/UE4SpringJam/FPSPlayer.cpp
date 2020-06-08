@@ -16,6 +16,7 @@
 #include "ConvoComponent.h"
 #include "Components/WidgetComponent.h"
 #include "NoteWidget.h"
+#include "Components/AudioComponent.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -31,6 +32,9 @@ void AFPSPlayer::BeginPlay()
 	
 	camera = FindComponentByClass<UCameraComponent>();
 	check(camera);
+
+	//Audio Setup
+	laserAudio = FindComponentByClass<UAudioComponent>();
 
 	//UI Setup
 	widgetMainHUD = CreateWidget<UMainHUDWidget>(GetWorld(), widgetMainHUDClass);
@@ -227,6 +231,8 @@ void AFPSPlayer::SetNote()
 			UNoteWidget* noteWidget = Cast<UNoteWidget>(noteNode->FindComponentByClass<UWidgetComponent>()->GetUserWidgetObject());
 			noteWidget->noteLocation = noteHit.ImpactPoint;
 			
+			UGameplayStatics::PlaySound2D(GetWorld(), soundScanOn, 1.0f, 1.3f);
+
 			notesInLevel.Add(noteNode);
 
 			widgetMainHUD->bNoteActive = true;
@@ -243,6 +249,8 @@ void AFPSPlayer::ShootHeat(float val)
 			widgetMainHUD->bNoteActive = false;
 			return;
 		}
+
+
 
 		particleSystems[heatBeamIndex]->SetActive(true);
 		particleSystems[heatBeamSparksIndex]->SetActive(true);
@@ -381,6 +389,8 @@ void AFPSPlayer::DeleteLastNote()
 		const int lastElement = notesInLevel.Num() - 1;
 		notesInLevel[lastElement]->Destroy();
 		notesInLevel.Pop();
+
+		UGameplayStatics::PlaySound2D(GetWorld(), soundScanOff, 1.0f, 0.75f);
 	}
 }
 

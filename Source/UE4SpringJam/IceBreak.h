@@ -24,6 +24,9 @@ public:
 
 	class UDestructibleComponent* dc;
 
+	UPROPERTY(EditAnywhere)
+	USoundBase* breakSound;
+
 	float crackVal = 0.f;
 	//const float crackIncrement = 0.01f;
 
