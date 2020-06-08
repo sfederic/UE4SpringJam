@@ -22,10 +22,11 @@ void ACrackable::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (crackVal >= 1.0f)
+	if (crackVal >= 1.0f && crackVal < 2.0f)
 	{
 		dc->ApplyDamage(1000.f, GetActorLocation(), GetActorForwardVector(), 2000.f);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), breakSound, GetActorLocation(), 1.5f, 0.9f);
+		crackVal = 2.0f;
 	}
 }
 

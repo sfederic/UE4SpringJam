@@ -98,6 +98,9 @@ public:
 
 	class UAudioComponent* laserAudio; //For looping
 
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* iceSpawn;
+
 	//Components
 	class UCameraComponent* camera;
 

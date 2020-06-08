@@ -332,6 +332,9 @@ void AFPSPlayer::ShootIce(float val)
 				trans.SetLocation(shootHit.ImpactPoint);
 				trans.SetRotation(FQuat(FRotator(0.f, FMath::RandRange(0.f, 360.f), 0.f)));
 				GetWorld()->SpawnActor<ASpawnIceBlock>(iceBlockSpawnClass, trans);
+
+				//TODO: Figure out whether to leave in
+				//UGameplayStatics::PlaySoundAtLocation(GetWorld(), iceSpawn, shootHit.ImpactPoint, 1.0f, 1.4f);
 			}
 		}
 		if (GetWorld()->LineTraceSingleByChannel(shootHit, particleSystems[iceBeamIndex]->GetComponentLocation(),
