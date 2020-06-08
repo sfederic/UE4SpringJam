@@ -28,7 +28,8 @@ void AIceBreak::Tick(float DeltaTime)
 		if (crackVal >= 1.0f)
 		{
 			dc->ApplyDamage(1000.f, GetActorLocation(), GetActorForwardVector(), 2000.f);
-			SetLifeSpan(3.0f);
+			SetLifeSpan(2.0f);
+			bIsCrackActive = false;
 		}
 	}
 }

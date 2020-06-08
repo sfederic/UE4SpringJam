@@ -125,7 +125,7 @@ void AFPSPlayer::Tick(float DeltaTime)
 			{
 				if (previousScanHit.GetActor() != scanHit.GetActor())
 				{
-					UGameplayStatics::PlaySound2D(GetWorld(), soundScan);
+					UGameplayStatics::PlaySound2D(GetWorld(), soundScan, 2.0f, 0.75f);
 				}
 
 				previousScanHit = scanHit;
