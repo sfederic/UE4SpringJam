@@ -2,6 +2,8 @@
 
 
 #include "MonumentManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Crackable.h"
 
 AMonumentManager::AMonumentManager()
 {
@@ -13,6 +15,7 @@ void AMonumentManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrackable::StaticClass(), monuments);
 }
 
 void AMonumentManager::Tick(float DeltaTime)

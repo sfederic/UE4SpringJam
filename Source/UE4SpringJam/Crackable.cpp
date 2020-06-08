@@ -4,6 +4,7 @@
 #include "Crackable.h"
 #include "DestructibleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "FPSPlayer.h"
 
 ACrackable::ACrackable()
 {
@@ -26,6 +27,11 @@ void ACrackable::Tick(float DeltaTime)
 	{
 		dc->ApplyDamage(1000.f, GetActorLocation(), GetActorForwardVector(), 2000.f);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), breakSound, GetActorLocation(), 1.5f, 0.9f);
+		AFPSPlayer* player = Cast<AFPSPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+		if (player)
+		{
+			player->widgetMainHUD->monumentsDestroyedCounter++;
+		}
 		crackVal = 2.0f;
 	}
 }
