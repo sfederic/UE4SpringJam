@@ -186,13 +186,16 @@ public:
 	bool bIntel;	
 
 	const int finalMonumentCounter = 7;
-	int bossDeathMonumentCounter = 10;
+	int bossDeathMonumentCounter = 11;
 
 	float bossTimer = 0;
 	float bossScreamTimer = 60.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bMouseUp;
+
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* endTheme;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCameraShake> bossShake;

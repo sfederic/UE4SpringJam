@@ -19,6 +19,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Sound/AmbientSound.h"
+#include "GameFramework/RotatingMovementComponent.h" 
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -144,6 +145,12 @@ void AFPSPlayer::Tick(float DeltaTime)
 		if (bossTimer > 1.0f && bossDeathMonumentCounter != 0)
 		{
 			widgetMainHUD->bossCountdown--;
+
+			if (widgetMainHUD->bossCountdown <= 0)
+			{
+				EndGameWidget();
+			}
+
 			bossTimer = 0.f;
 		}
 
@@ -160,7 +167,8 @@ void AFPSPlayer::Tick(float DeltaTime)
 				bossActor->GetActorForwardVector(), 1000.f);
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), soundBossScream, bossActor->GetActorLocation(),
 				1.0f, 0.5f);
-			bossActor->SetLifeSpan(15.f);
+			//bossActor->SetLifeSpan(15.f);
+			bossActor->FindComponentByClass<URotatingMovementComponent>()->RotationRate = FRotator(0.f);
 			//UGameplayStatics::PlayWorldCameraShake(GetWorld(), bossShake, GetActorLocation(), 50.f, 100.f);
 			bossDeathMonumentCounter = INT_MAX; //toexit conditional
 
@@ -557,7 +565,9 @@ void AFPSPlayer::ProgressText()
 
 void AFPSPlayer::SetEndGame()
 {
-	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->StartCameraFade(1.0f, 1.0f, 10.f, FColor::Black, true, true);
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->StartCameraFade(0.0f, 1.0f, 8.f, FColor::Black, false, true);
+	levelAudio->GetAudioComponent()->FadeOut(10.f, 0.f);
+
 	FTimerHandle handle;
 	GetWorldTimerManager().SetTimer(handle, this, &AFPSPlayer::EndGameWidget, 10.f, false);
 }
@@ -566,8 +576,13 @@ void AFPSPlayer::EndGameWidget()
 {
 	endWidget = CreateWidget<UUserWidget>(GetWorld(), endWidgetClass);
 
+	UGameplayStatics::PlaySound2D(GetWorld(), endTheme);
+
 	widgetMainHUD->RemoveFromViewport();
-	
+	widgetScanning->RemoveFromViewport();
+	widgetConvo->RemoveFromViewport();
+
 	endWidget->AddToViewport();
-	
+
+	this->SetActorTickEnabled(false);
 }
