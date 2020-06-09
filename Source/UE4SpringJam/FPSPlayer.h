@@ -47,6 +47,7 @@ public:
 	void ProgressText();
 
 	void SetEndGame();
+	void EndGameWidget();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -58,6 +59,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Widgets")
 	TSubclassOf<UUserWidget> widgetConvoClass;
 
+	UPROPERTY(EditAnywhere, Category = "Widgets")
+	TSubclassOf<UUserWidget> endWidgetClass;
+
 	//WIDGET OBJECTS 
 	UPROPERTY()
 	UWidgetScanning* widgetScanning;
@@ -67,6 +71,9 @@ public:
 	
 	UPROPERTY()
 	UConvoWidget* widgetConvo;
+
+	UPROPERTY()
+	UUserWidget* endWidget;
 
 	//Actor spawn templates
 	UPROPERTY(EditAnywhere, Category="Spawn Templates")
@@ -178,8 +185,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIntel;	
 
-	const int finalMonumentCounter = 1;
-	int bossDeathMonumentCounter = 1;
+	const int finalMonumentCounter = 7;
+	int bossDeathMonumentCounter = 10;
 
 	float bossTimer = 0;
 	float bossScreamTimer = 60.f;

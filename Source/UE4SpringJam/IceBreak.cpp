@@ -26,12 +26,13 @@ void AIceBreak::Tick(float DeltaTime)
 		crackVal += DeltaTime;
 		dc->SetScalarParameterValueOnMaterials("CrackValue", crackVal);
 
-		if (crackVal >= 1.0f)
+		if (crackVal >= 1.0f && crackVal < 2.0f)
 		{
 			dc->ApplyDamage(1000.f, GetActorLocation(), GetActorForwardVector(), 2000.f);
 			SetLifeSpan(2.0f);
 			bIsCrackActive = false;
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), breakSound, GetActorLocation());
+			crackVal = 2.0f;
 		}
 	}
 }

@@ -34,6 +34,7 @@ void ACrackable::Tick(float DeltaTime)
 			player->widgetMainHUD->monumentsDestroyedCounter++;
 			if (player->widgetMainHUD->monumentsDestroyedCounter < player->finalMonumentCounter)
 			{
+				//FString context;
 				player->intelData = FindComponentByClass<UConvoComponent>()->data;
 			}
 		}

@@ -32,9 +32,10 @@ void AFPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-
 	camera = FindComponentByClass<UCameraComponent>();
 	check(camera);
+
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->StartCameraFade(1.0f, 0.0f, 10.f, FColor::Black);
 
 	//Audio Setup
 	laserAudio = FindComponentByClass<UAudioComponent>();
@@ -541,6 +542,10 @@ void AFPSPlayer::ProgressText()
 			bIntel = false;
 			widgetConvo->RemoveFromViewport();
 			intelData = nullptr;
+
+			currentIntelIndex = 0;
+
+			rows.Empty();
 		}
 		else
 		{
@@ -552,4 +557,17 @@ void AFPSPlayer::ProgressText()
 
 void AFPSPlayer::SetEndGame()
 {
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->StartCameraFade(1.0f, 1.0f, 10.f, FColor::Black, true, true);
+	FTimerHandle handle;
+	GetWorldTimerManager().SetTimer(handle, this, &AFPSPlayer::EndGameWidget, 10.f, false);
+}
+
+void AFPSPlayer::EndGameWidget()
+{
+	endWidget = CreateWidget<UUserWidget>(GetWorld(), endWidgetClass);
+
+	widgetMainHUD->RemoveFromViewport();
+	
+	endWidget->AddToViewport();
+	
 }
