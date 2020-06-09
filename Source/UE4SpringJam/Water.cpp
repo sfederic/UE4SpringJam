@@ -17,9 +17,9 @@ void AWater::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	box = FindComponentByClass<UBoxComponent>();
-	box->OnComponentBeginOverlap.AddDynamic(this, &AWater::StopSnow);
-	box->OnComponentEndOverlap.AddDynamic(this, &AWater::StartSnow);
+	//box = FindComponentByClass<UBoxComponent>();
+	//box->OnComponentBeginOverlap.AddDynamic(this, &AWater::StopSnow);
+	//box->OnComponentEndOverlap.AddDynamic(this, &AWater::StartSnow);
 }
 
 void AWater::Tick(float DeltaTime)
@@ -28,7 +28,7 @@ void AWater::Tick(float DeltaTime)
 
 }
 
-void AWater::StartSnow(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+/*void AWater::StartSnow(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	AFPSPlayer* player = Cast<AFPSPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 	if (player)
@@ -46,4 +46,4 @@ void AWater::StopSnow(UPrimitiveComponent* OverlappedComponent, AActor* OtherAct
 		player->particleSystems[player->snowParticleIndex]->SetActive(false);
 		UE_LOG(LogTemp, Warning, TEXT("Snow off"));
 	}
-}
+}*/
