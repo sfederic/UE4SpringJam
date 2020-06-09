@@ -8,7 +8,7 @@
 #include "Boss.generated.h"
 
 UCLASS()
-class UE4SPRINGJAM_API ABoss : public AActor
+class UE4SPRINGJAM_API ABoss : public AActor, public IHeatReact
 {
 	GENERATED_BODY()
 	
@@ -20,6 +20,7 @@ protected:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
+	virtual void Heat() override;
 
 	UPROPERTY(EditAnywhere)
 	float health;

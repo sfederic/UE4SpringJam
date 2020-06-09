@@ -18,6 +18,7 @@
 #include "NoteWidget.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Sound/AmbientSound.h"
 
 AFPSPlayer::AFPSPlayer()
 {
@@ -88,6 +89,11 @@ void AFPSPlayer::BeginPlay()
 	}
 
 	particleSystems[snowParticleIndex]->SetActive(true);
+
+	bossActor->SetActorHiddenInGame(true);
+
+
+	intelData = startGameText;
 }
 
 void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -110,7 +116,7 @@ void AFPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	InputComponent->BindAction("SetScan", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetScan);
 	InputComponent->BindAction("SetNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::SetNote);
 	InputComponent->BindAction("DeleteNote", EInputEvent::IE_Pressed, this, &AFPSPlayer::DeleteLastNote);
-	InputComponent->BindAction("Intel", EInputEvent::IE_Pressed, this, &AFPSPlayer::Intel);
+	//InputComponent->BindAction("Intel", EInputEvent::IE_Pressed, this, &AFPSPlayer::Intel);
 	InputComponent->BindAction("ProgressText", EInputEvent::IE_Pressed, this, &AFPSPlayer::ProgressText);
 	InputComponent->BindAxis("ShootHeat", this, &AFPSPlayer::ShootHeat);
 	InputComponent->BindAxis("ShootIce", this, &AFPSPlayer::ShootIce);
@@ -121,23 +127,73 @@ void AFPSPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//Check end game stat
-	if (widgetMainHUD->monumentsDestroyedCounter >= 1 && bFirstBossSpawn == false)
+	if (widgetMainHUD->monumentsDestroyedCounter >= finalMonumentCounter && bFirstBossSpawn == false)
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), soundBossScream, bossActor->GetActorLocation(), 1.0f, 0.8f);
 		bFirstBossSpawn = true;
+		intelData = bossSpawnText;
 
+		widgetMainHUD->bBossTimer = true;
+	}
+	
+	if (widgetMainHUD->bBossTimer)
+	{
+		bossTimer += FApp::GetDeltaTime();
+		bossScreamTimer += FApp::GetDeltaTime();
+		if (bossTimer > 1.0f && bossDeathMonumentCounter != 0)
+		{
+			widgetMainHUD->bossCountdown--;
+			bossTimer = 0.f;
+		}
+
+		if (bossScreamTimer > 60.f)
+		{
+			UGameplayStatics::PlayWorldCameraShake(GetWorld(), bossShake, GetActorLocation(), 50.f, 100.f);
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), soundBossScream, bossActor->GetActorLocation(), 1.0f, 1.1f);
+			bossScreamTimer = 0.f;
+		}
+
+		if (widgetMainHUD->monumentsDestroyedCounter >= bossDeathMonumentCounter)
+		{
+			bossActor->FindComponentByClass<UDestructibleComponent>()->ApplyDamage(1000.f, bossActor->GetActorLocation(),
+				bossActor->GetActorForwardVector(), 1000.f);
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), soundBossScream, bossActor->GetActorLocation(),
+				1.0f, 0.5f);
+			bossActor->SetLifeSpan(15.f);
+			//UGameplayStatics::PlayWorldCameraShake(GetWorld(), bossShake, GetActorLocation(), 50.f, 100.f);
+			bossDeathMonumentCounter = INT_MAX; //toexit conditional
+
+			FTimerHandle handle;
+			GetWorldTimerManager().SetTimer(handle, this, &AFPSPlayer::SetEndGame, 20.f, false);
+
+			this->intelData = bossDeathText;
+		}
 	}
 
 	if (bFirstBossSpawn) 
 	{
 		UExponentialHeightFogComponent *fogComp = fog->GetComponent();
 		float currentDensity = fogComp->FogDensity;
-		currentDensity -= FApp::GetDeltaTime() * 0.5f;
+		currentDensity -= FApp::GetDeltaTime() * 0.05f;
 		fogComp->SetFogDensity(currentDensity);
 		
 		//Turn off snow
 		particleSystems[snowParticleIndex]->SetActive(false);
-		bossActor->SetHidden(false);
+
+		bossActor->SetActorHiddenInGame((false));
+		bossOpacity += FApp::GetDeltaTime() * 0.05f;
+		bossActor->FindComponentByClass<UMeshComponent>()->SetScalarParameterValueOnMaterials(TEXT("OpacityValue"), bossOpacity);
+
+		//shootDistance = 10000.f;
+		moveSpeed = 0.9f;
+
+		if (levelAudio->GetAudioComponent()->IsPlaying() && bStopMusic == false)
+		{
+			bStopMusic = true;
+			levelAudio->GetAudioComponent()->Stop();
+			levelAudio->GetAudioComponent()->Sound = bossMusic;
+			levelAudio->GetAudioComponent()->Play();
+		}
 	}
 
 	//Scanning
@@ -192,6 +248,29 @@ void AFPSPlayer::Tick(float DeltaTime)
 			widgetScanning->scanName = TEXT("No Name");
 			widgetScanning->scanText = TEXT("No Scan Data");
 		}
+	}
+
+	//Dialogue
+	if (intelData && widgetConvo->IsInViewport() == false)
+	{
+		FString context;
+		intelData->GetAllRows(context, rows);
+
+		widgetConvo->AddToViewport();
+
+		widgetConvo->name = rows[0]->name;
+		widgetConvo->text = rows[0]->text;
+
+		bIntel = true;
+	}
+
+	if (bIntel)
+	{
+		bMouseUp = true;
+	}
+	else
+	{
+		bMouseUp = false;
 	}
 }
 
@@ -264,7 +343,7 @@ void AFPSPlayer::SetNote()
 
 void AFPSPlayer::ShootHeat(float val)
 {
-	if (val && !bIntel)
+	if (val && !bIntel && !bMouseUp)
 	{
 		if (widgetMainHUD->bNoteActive)
 		{
@@ -323,7 +402,7 @@ void AFPSPlayer::ShootHeat(float val)
 
 void AFPSPlayer::ShootIce(float val)
 {
-	if (val && !bIntel)
+	if (val && !bIntel && !bMouseUp)
 	{
 		if (widgetMainHUD->bNoteActive)
 		{
@@ -461,6 +540,7 @@ void AFPSPlayer::ProgressText()
 		{
 			bIntel = false;
 			widgetConvo->RemoveFromViewport();
+			intelData = nullptr;
 		}
 		else
 		{
@@ -468,4 +548,8 @@ void AFPSPlayer::ProgressText()
 			widgetConvo->text = rows[currentIntelIndex]->text;
 		}
 	}
+}
+
+void AFPSPlayer::SetEndGame()
+{
 }

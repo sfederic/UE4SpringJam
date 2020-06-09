@@ -2,6 +2,7 @@
 
 
 #include "Boss.h"
+#include "DestructibleComponent.h"
 
 ABoss::ABoss()
 {
@@ -19,5 +20,10 @@ void ABoss::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ABoss::Heat()
+{
+	//FindComponentByClass<UDestructibleComponent>()->ApplyDamage(1000.f, GetActorLocation(), GetActorForwardVector(), 1000.f);
 }
 

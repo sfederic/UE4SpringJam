@@ -9,6 +9,7 @@
 #include "ConvoWidget.h"
 #include "ConvoData.h"
 #include "Engine/ExponentialHeightFog.h" 
+#include "Camera/CameraShake.h" 
 #include "FPSPlayer.generated.h"
 
 UCLASS()
@@ -44,6 +45,8 @@ public:
 	void DeleteLastNote();
 	void Intel();
 	void ProgressText();
+
+	void SetEndGame();
 
 	//WIDGET CLASSES
 	UPROPERTY(EditAnywhere, Category="Widgets")
@@ -142,14 +145,56 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	float shootDistance;
+
+	float bossOpacity = 0.f;
 	
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* bossMusic;	
+	
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	class AAmbientSound* levelAudio;	
+	
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* bossExplosion;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataTable* intelData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataTable* bossSpawnText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataTable* bossDeathText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataTable* startGameText;
+
 	//Intel vars
 	TArray<FConvoData*> rows;
 	int currentIntelIndex = 0;
 
 	bool bIsScanning;
-	bool bIntel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIntel;	
+
+	const int finalMonumentCounter = 1;
+	int bossDeathMonumentCounter = 1;
+
+	float bossTimer = 0;
+	float bossScreamTimer = 60.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bMouseUp;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShake> bossShake;
+
 	bool bFirstBossSpawn = false;
+	bool bStopMusic = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGameOver = false;
 
 	UPROPERTY(EditAnywhere)
 	AActor* bossActor;

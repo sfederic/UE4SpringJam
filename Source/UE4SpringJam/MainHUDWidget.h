@@ -16,8 +16,14 @@ class UE4SPRINGJAM_API UMainHUDWidget : public UUserWidget
 public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int bossCountdown = 300; //5 minutes
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int monumentsDestroyedCounter = 0;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     bool bNoteActive;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bBossTimer = false;
 };

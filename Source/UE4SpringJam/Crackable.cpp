@@ -5,6 +5,7 @@
 #include "DestructibleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "FPSPlayer.h"
+#include "ConvoComponent.h"
 
 ACrackable::ACrackable()
 {
@@ -31,6 +32,10 @@ void ACrackable::Tick(float DeltaTime)
 		if (player)
 		{
 			player->widgetMainHUD->monumentsDestroyedCounter++;
+			if (player->widgetMainHUD->monumentsDestroyedCounter < player->finalMonumentCounter)
+			{
+				player->intelData = FindComponentByClass<UConvoComponent>()->data;
+			}
 		}
 		crackVal = 2.0f;
 	}
